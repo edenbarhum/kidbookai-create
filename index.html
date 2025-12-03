@@ -1,13 +1,1584 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>assets</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>יצירת ספר אישי - Mebook Flow</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Varela+Round&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+  <style>
+    :root {
+      --primary-color: #FF6F61;
+      --secondary-color: #FFD166;
+      --boy-color: #5DADE2;
+      --girl-color: #F8BBD0;
+      --text-dark: #333;
+      --text-light: #555;
+      --bg-light: #F8F9FA;
+      --border-light: #E0E0E0;
+      --shadow-light: rgba(0, 0, 0, .08);
+      --mebook-crop-border: rgb(254, 168, 39);
+    }
+
+    body {
+      font-family: 'Open Sans', Arial, sans-serif;
+      background: linear-gradient(135deg, var(--bg-light) 0%, #E0F7FA 100%);
+      direction: rtl;
+      text-align: right;
+      padding: 20px;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      max-width: 650px;
+      margin: 20px auto;
+      background: #fff;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 8px 30px var(--shadow-light);
+      text-align: center
+    }
+
+    h1 {
+      font-family: 'Varela Round', sans-serif;
+      color: var(--text-dark);
+      font-size: 2em;
+      margin-bottom: 20px
+    }
+
+    /* --- הפרדה לוגית בין המסכים --- */
+
+    /* מסך 2: מוסתר בהתחלה */
+    .details-section-hidden {
+      opacity: 0;
+      max-height: 0;
+      overflow: hidden;
+      transform: translateY(20px);
+      transition: opacity 0.5s ease-out, max-height 0.5s ease-out, transform 0.5s ease-out;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* מסך 2: גלוי */
+    .details-section-visible {
+      opacity: 1;
+      max-height: 3500px;
+      overflow: visible;
+      transform: translateY(0);
+      transition: opacity 0.5s ease-in, max-height 0.5s ease-in, transform 0.5s ease-in;
+    }
+
+    /* מסך 1: מוסתר כשהלודר פעיל או כשעוברים למסך 2 */
+    .hidden {
+      display: none !important;
+      opacity: 0;
+    }
+
+    #initial-upload-area.loading-active .profile-pic-group,
+    #initial-upload-area.loading-active .upload-hint.initial-hint {
+      display: none;
+    }
+
+    /* ----------------------------- */
+
+    .visible {
+      display: flex !important;
+      opacity: 1;
+    }
+
+    .form-group {
+      margin-bottom: 25px;
+      text-align: right
+    }
+
+    .form-group-row {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .half-width {
+      flex-basis: 50%;
+      width: 50%;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: 600;
+      color: var(--text-dark);
+      font-size: 1.1em
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="tel"] {
+      width: 100%;
+      padding: 15px 12px;
+      border: 2px solid var(--border-light);
+      border-radius: 12px;
+      box-sizing: border-box;
+      font-size: 1em;
+      color: var(--text-dark);
+      transition: border-color .3s, box-shadow .3s;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    input[type="tel"]:focus {
+      border-color: var(--mebook-crop-border);
+      box-shadow: 0 0 0 3px rgba(254, 168, 39, .2);
+      outline: none;
+    }
+
+    .photo-upload-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 30px
+    }
+
+    .profile-pic-group {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      margin: 0 auto 40px auto;
+    }
+
+    /* עיצוב זהה לשני העיגולים, אך הם אלמנטים נפרדים ב-HTML */
+    #profile-pic-wrapper,
+    #start-flow-button {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      overflow: hidden;
+      border: none;
+      padding: 3px;
+      background-image: linear-gradient(to bottom right, var(--secondary-color) 0%, var(--primary-color) 100%);
+      background-clip: padding-box;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, .15);
+      transition: all .5s;
+      cursor: pointer;
+    }
+
+    .child-image-container {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative
+    }
+
+    #image-preview {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%
+    }
+
+    .placeholder-icon.big-plus {
+      position: absolute;
+      font-size: 8em;
+      color: var(--primary-color)
+    }
+
+    #image-preview.has-image+.placeholder-icon {
+      display: none
+    }
+
+    .upload-icon {
+      position: absolute;
+      bottom: 1px;
+      right: 3px;
+      z-index: 10;
+      background: var(--primary-color);
+      color: #fff;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.1em;
+      border: 1px solid #fff;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, .35);
+      cursor: pointer;
+    }
+
+    .upload-hint.initial-hint {
+      margin-top: 30px;
+      margin-bottom: 50px;
+      font-size: 1.1em;
+      color: var(--text-light)
+    }
+
+    #child-photo {
+      display: none
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      inset: 0;
+      background: rgba(0, 0, 0, .7);
+      backdrop-filter: blur(3px);
+      align-items: center;
+      justify-content: center
+    }
+
+    .modal.visible {
+      display: flex !important;
+    }
+
+    .modal-content {
+      background: #fff;
+      margin: auto;
+      padding: 20px;
+      border-radius: 12px;
+      position: relative;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, .3);
+      text-align: center
+    }
+
+    #cropping-modal .modal-content {
+      padding: 30px 20px 20px;
+      max-width: 450px;
+    }
+
+    .close-button {
+      color: #aaa;
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      font-size: 1.5em;
+      font-weight: bold;
+      cursor: pointer
+    }
+
+    .primary-color-btn {
+      background: var(--secondary-color);
+      color: var(--text-dark);
+      box-shadow: 0 5px 15px rgba(255, 209, 102, .4);
+      font-weight: bold;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 10px;
+      width: 100%;
+      font-size: 1.3em;
+      cursor: pointer;
+      margin-top: 15px
+    }
+
+    .cropping-area {
+      position: relative;
+      width: 100%;
+      max-width: 350px;
+      height: 350px;
+      margin: 0 auto 20px auto;
+      overflow: hidden;
+    }
+
+    .image-to-crop-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #fff;
+      position: relative;
+    }
+
+    #modal-crop-image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transform-origin: center center;
+      z-index: 1;
+      cursor: grab;
+    }
+
+    #modal-crop-image:active {
+      cursor: grabbing;
+    }
+
+    .crop-circle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 95%;
+      height: 95%;
+      border-radius: 50%;
+      border: 2px solid var(--mebook-crop-border);
+      box-shadow: 0 0 0 2000px rgba(0, 0, 0, .5);
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .crop-controls.mebook-style {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 20px 0;
+      margin-top: -10px;
+    }
+
+    .mebook-rotate-btn {
+      background: transparent;
+      color: var(--text-light);
+      border: none;
+      padding: 8px;
+      font-size: 1.2em;
+      cursor: pointer;
+      border-radius: 50%;
+      transition: color .2s;
+    }
+
+    .mebook-rotate-btn:hover {
+      color: var(--primary-color);
+    }
+
+    .mebook-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 250px;
+      height: 6px;
+      background: #e0e0e0;
+      outline: none;
+      opacity: 0.9;
+      transition: opacity .2s;
+      border-radius: 3px;
+      margin: 0 5px;
+    }
+
+    .mebook-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      background: var(--mebook-crop-border);
+      cursor: pointer;
+      border-radius: 50%;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .mebook-slider::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      background: var(--mebook-crop-border);
+      cursor: pointer;
+      border-radius: 50%;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      border: none;
+    }
+
+    .control-icon {
+      color: var(--text-light);
+    }
+
+    .phone-input-group {
+      display: flex;
+      border: 2px solid var(--border-light);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: border-color .3s, box-shadow .3s;
+    }
+
+    .phone-input-group:has(input:focus) {
+      border-color: var(--mebook-crop-border);
+      box-shadow: 0 0 0 3px rgba(254, 168, 39, .2);
+    }
+
+    .country-code {
+      background: var(--bg-light);
+      color: var(--text-dark);
+      padding: 15px 15px;
+      order: 1;
+      border-left: none;
+      border-right: 2px solid var(--border-light);
+      font-size: 1em;
+      font-weight: 600;
+      display: flex;
+      align-items: center
+    }
+
+    #phone-number {
+      flex-grow: 1;
+      border: none;
+      padding: 15px 12px;
+      text-align: left;
+      direction: ltr;
+      order: -1;
+    }
+
+    .gender-selection {
+      display: flex;
+      gap: 10px;
+      margin: 0;
+      padding-top: 5px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .gender-option {
+      flex-grow: 1;
+      text-align: center;
+      background: var(--bg-light);
+      border: 2px solid var(--border-light);
+      padding: 15px 10px;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--text-dark);
+      font-weight: 600;
+      transition: all .2s;
+    }
+
+    .gender-option.selected {
+      background: var(--boy-color);
+      color: #fff;
+      border-color: var(--boy-color);
+      box-shadow: 0 0 0 2px var(--boy-color);
+    }
+
+    .gender-option[data-gender="girl"].selected {
+      background: var(--girl-color);
+      color: #fff;
+      border-color: var(--girl-color);
+      box-shadow: 0 0 0 2px var(--girl-color);
+    }
+
+    .option-cards {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-top: 5px;
+    }
+
+    .selection-card {
+      display: flex;
+      align-items: center;
+      background: var(--bg-light);
+      border: 2px solid var(--border-light);
+      border-radius: 12px;
+      padding: 15px;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+      position: relative;
+      gap: 15px;
+      text-align: right;
+    }
+
+    .card-text-block {
+      flex-grow: 1;
+    }
+
+    .card-icon {
+      font-size: 1.8em;
+      color: var(--primary-color);
+      line-height: 1;
+    }
+
+    .card-title {
+      font-weight: 700;
+      color: var(--text-dark);
+      font-size: 1em;
+      margin-bottom: 3px;
+    }
+
+    .card-description {
+      font-size: 0.85em;
+      color: var(--text-light);
+    }
+
+    .card-radio {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--border-light);
+      background: #fff;
+      flex-shrink: 0;
+      margin-inline-start: 10px;
+      transition: border-color .2s;
+    }
+
+    .selection-card.selected {
+      border-color: var(--primary-color);
+      background: #fff;
+      box-shadow: 0 0 0 2px rgba(255, 111, 97, .3);
+    }
+
+    .selection-card.selected .card-radio {
+      border-color: var(--primary-color);
+      background: var(--primary-color);
+    }
+
+    label.topic-title {
+      text-align: center;
+    }
+
+    button[type="submit"] {
+      background: var(--primary-color);
+      color: #fff;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 1.3em;
+      font-weight: bold;
+      box-shadow: 0 5px 15px rgba(255, 111, 97, .4);
+      margin-top: 30px
+    }
+
+    .trait-selection-container {
+      padding: 15px;
+      border: 2px solid var(--border-light);
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .trait-chips-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-start;
+    }
+
+    .trait-chip {
+      padding: 8px 15px;
+      border: 2px solid var(--border-light);
+      border-radius: 20px;
+      background: var(--bg-light);
+      color: var(--text-light);
+      font-size: 0.9em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+      text-align: center;
+    }
+
+    .trait-chip:hover {
+      background: #EAEAEA;
+      border-color: #C0C0C0;
+    }
+
+    .trait-chip.selected {
+      background: var(--primary-color);
+      border-color: var(--primary-color);
+      color: #fff;
+      box-shadow: 0 2px 5px rgba(255, 111, 97, 0.4);
+    }
+
+    .hobby-chips-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 15px;
+    }
+
+    .hobby-chip {
+      padding: 10px 16px;
+      border: 2px solid var(--border-light);
+      border-radius: 25px;
+      background: #fff;
+      color: var(--text-dark);
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+    }
+
+    .hobby-chip:hover {
+      background: #F0F0F0;
+      transform: translateY(-2px);
+    }
+
+    .hobby-chip.selected {
+      background: #FFF3CD;
+      border-color: var(--secondary-color);
+      color: var(--text-dark);
+      box-shadow: 0 3px 8px rgba(255, 209, 102, 0.3);
+    }
+
+    #other-hobby-input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      font-size: 0.9em;
+      margin-top: 5px;
+      display: block;
+    }
+
+    #other-hobby-input:focus {
+      border-color: var(--mebook-crop-border);
+      outline: none;
+    }
+
+    #specific-trait-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 2px solid var(--border-light);
+      border-radius: 8px;
+      box-sizing: border-box;
+      font-size: 0.95em;
+      color: var(--text-dark);
+      transition: border-color .3s;
+      resize: vertical;
+      min-height: 50px;
+      font-family: inherit;
+      margin-top: 5px;
+    }
+
+    #specific-trait-input:focus {
+      border-color: var(--mebook-crop-border);
+      box-shadow: 0 0 0 2px rgba(254, 168, 39, .2);
+      outline: none;
+    }
+
+    .form-group.invalid .trait-selection-container {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(255, 111, 97, 0.2);
+    }
+
+    #result {
+      margin-top: 24px;
+      text-align: center
+    }
+
+    #status {
+      margin-top: 8px;
+      color: #555
+    }
+
+    .error {
+      color: #c0392b
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 3px solid #eee;
+      border-top-color: var(--primary-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      vertical-align: middle;
+      margin-inline-start: 6px
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .modal-content h2 {
+      font-family: 'Varela Round', sans-serif;
+      color: var(--text-dark);
+      font-size: 1.8em;
+      margin-bottom: 5px;
+    }
+
+    .modal-content .main-tips-subtitle {
+      font-weight: 600;
+      color: var(--primary-color);
+      margin-bottom: 5px;
+      font-size: 1.1em;
+    }
+
+    .modal-content .main-upload-hint {
+      color: var(--text-light);
+      margin-bottom: 20px;
+    }
+
+    .image-examples-container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      margin-bottom: 25px;
+      gap: 5px;
+    }
+
+    .example-image {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .good-example-large {
+      width: 35%;
+      max-width: 120px;
+    }
+
+    .bad-example-small {
+      width: 20%;
+      max-width: 75px;
+    }
+
+    .example-icon-wrapper {
+      width: 100%;
+      padding-top: 100%;
+      height: 0;
+      position: relative;
+      border-radius: 50%;
+      background: #fff;
+      border: 1px solid var(--border-light);
+      margin-bottom: 0;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    .example-icon-wrapper img.example-img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    .status-icon {
+      position: absolute;
+      bottom: -5px;
+      right: -5px;
+      font-size: 1.8em;
+      border-radius: 50%;
+      background: #fff;
+      padding: 2px;
+      box-shadow: 0 0 5px rgba(0, 0, 0, .2);
+    }
+
+    .status-icon.fa-check-circle {
+      color: #2ECC71;
+    }
+
+    .status-icon.fa-times-circle {
+      color: #E74C3C;
+    }
+
+    .security-disclaimer {
+      font-size: 0.9em;
+      color: var(--text-light);
+      background: var(--bg-light);
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-light);
+      margin-bottom: 20px;
+      text-align: right;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .security-disclaimer i {
+      color: var(--secondary-color);
+      margin-top: 2px;
+    }
+
+    #main-page-loader {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary-color);
+      font-weight: 600;
+      font-size: 1.1em;
+      gap: 8px;
+      text-align: center;
+      padding: 20px;
+      min-height: 250px;
+    }
+
+    #main-page-loader .fa-spinner {
+      font-size: 3em;
+    }
+
+    .fa-spin {
+      animation: fa-spin 1s infinite linear;
+    }
+
+    @keyframes fa-spin {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(359deg);
+      }
+    }
+
+    .trait-error-message {
+      color: #c0392b;
+      font-size: 0.9em;
+      font-weight: 600;
+      margin-top: 5px;
+      min-height: 20px;
+      text-align: right;
+      transition: opacity 0.3s;
+      opacity: 0;
+    }
+
+    .trait-error-message.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>בואו ניצור את ההרפתקאה של הילד שלכם</h1>
+
+    <form id="book-creation-form">
+      <input type="file" id="cropped-file-input" name="child_photo_cropped" style="display:none;">
+
+      <div class="photo-upload-area" id="initial-upload-area">
+        <div class="profile-pic-group">
+          <div class="profile-pic-wrapper" id="start-flow-button">
+            <div class="child-image-container">
+              <i class="fas fa-plus placeholder-icon big-plus"></i>
+            </div>
+          </div>
+        </div>
+        <p class="upload-hint initial-hint">העלו תמונה איכותית וברורה של ילדכם כדי להתחיל</p>
+
+        <div id="main-page-loader" class="hidden">
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>בודק התאמה לתמונה...</p>
+        </div>
+
+        <input type="file" id="child-photo" name="child_photo_full" accept="image/jpeg, image/png, image/webp"
+          style="display:none;">
+      </div>
+
+      <div id="details-section" class="details-section-hidden">
+        <div class="profile-pic-group">
+          <div class="profile-pic-wrapper" id="profile-pic-wrapper">
+            <div class="child-image-container">
+              <img id="image-preview" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="">
+              <i class="fas fa-plus placeholder-icon big-plus"></i>
+            </div>
+          </div>
+          <div class="upload-icon"><i class="fas fa-pencil-alt"></i></div>
+        </div>
+        <div class="form-group">
+          <input type="text" id="child-name" name="child_name" placeholder="שם הדמות הראשית" required>
+        </div>
+        <div class="form-group-row">
+          <div class="half-width">
+            <input type="number" id="child-age" name="child_age" min="1" max="14" placeholder="גיל" required>
+          </div>
+          <div class="gender-selection half-width">
+            <div class="gender-option" data-gender="boy"><i class="fas fa-mars"></i> בן</div>
+            <div class="gender-option" data-gender="girl"><i class="fas fa-venus"></i> בת</div>
+            <input type="hidden" id="child-gender" name="child_gender" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="topic-title">המסר החינוכי של הסיפור: בחרו את הערך המרכזי.</label>
+          <div class="option-cards">
+            <div class="selection-card" data-option-value="space">
+              <div class="card-radio"></div>
+              <div class="card-text-block">
+                <div class="card-title">כוחה של חברות</div>
+                <div class="card-description">ללמוד על חשיבות שיתוף הפעולה, הקשבה לאחרים ועזרה לחברים
+                  במצוקה.
+                </div>
+              </div>
+              <div class="card-icon"><i class="fas fa-users"></i></div>
+            </div>
+            <div class="selection-card" data-option-value="jungle">
+              <div class="card-radio"></div>
+              <div class="card-text-block">
+                <div class="card-title">אומץ והתגברות</div>
+                <div class="card-description">לגלות את הכוח הפנימי להתמודד עם פחדים, להאמין בעצמך ולא
+                  לוותר מול אתגרים.
+                </div>
+              </div>
+              <div class="card-icon"><i class="fas fa-shield-alt"></i></div>
+            </div>
+            <div class="selection-card" data-option-value="fantasy">
+              <div class="card-radio"></div>
+              <div class="card-text-block">
+                <div class="card-title">סקרנות וגילוי</div>
+                <div class="card-description">לעודד את הרצון לדעת, לשאול שאלות, לחקור וללמוד דברים חדשים
+                  בדרך יצירתיות.</div>
+              </div>
+              <div class="card-icon"><i class="fas fa-lightbulb"></i></div>
+            </div>
+            <div class="selection-card" data-option-value="sea">
+              <div class="card-radio"></div>
+              <div class="card-text-block">
+                <div class="card-title">כולם מיוחדים</div>
+                <div class="card-description">להבין שכל אחד שונה, לכבד דעות שונות ולחגוג את הייחודיות של
+                  כל אדם.</div>
+              </div>
+              <div class="card-icon"><i class="fas fa-handshake"></i></div>
+            </div>
+          </div>
+          <input type="hidden" id="book-topic" name="book_topic" required>
+        </div>
+        <div class="form-group" id="child-traits-group">
+          <label class="topic-title">במה הילד/ה שלכם מצטיין/ת? (בחרו לפחות 2 תכונות)</label>
+          <div class="trait-selection-container">
+            <div class="trait-chips-list">
+              <span class="trait-chip" data-trait="curious">סקרן/ית</span>
+              <span class="trait-chip" data-trait="brave">אמיץ/ה</span>
+              <span class="trait-chip" data-trait="creative">יצירתי/ת</span>
+              <span class="trait-chip" data-trait="adventurous">הרפתקנ/ית</span>
+              <span class="trait-chip" data-trait="kind">טוב/ת לב</span>
+              <span class="trait-chip" data-trait="funny">מצחיק/ה</span>
+              <span class="trait-chip" data-trait="shy">ביישן/ית</span>
+              <span class="trait-chip" data-trait="energetic">אנרגטי/ת</span>
+            </div>
+          </div>
+          <input type="hidden" id="child-traits" name="child_traits" required data-min-selection="2"
+            data-max-selection="2">
+          <div id="trait-error-message" class="trait-error-message"></div>
+        </div>
+
+        <div class="form-group">
+          <label class="topic-title">מה הילד/ה הכי אוהב/ת לעשות?</label>
+          <div class="hobby-chips-list">
+            <div class="hobby-chip" data-hobby="drawing">🎨 לצייר ולצבוע</div>
+            <div class="hobby-chip" data-hobby="playing_ball">⚽ לשחק בכדור</div>
+            <div class="hobby-chip" data-hobby="building_lego">🧱 לבנות בלגו</div>
+            <div class="hobby-chip" data-hobby="dancing">💃 לרקוד</div>
+            <div class="hobby-chip" data-hobby="baking">🧁 לאפות במטבח</div>
+            <div class="hobby-chip" data-hobby="reading">📚 לקרוא סיפורים</div>
+            <div class="hobby-chip" data-hobby="cycling">🚲 לרכוב על אופניים</div>
+            <div class="hobby-chip" data-hobby="singing">🎤 לשיר שירים</div>
+            <div class="hobby-chip" data-hobby="playing_with_animals">🐶 לשחק עם חיות</div>
+          </div>
+          <input type="text" id="other-hobby-input" placeholder="עוד משהו? (למשל: לנגן, פאזלים...)" />
+          <input type="hidden" id="child-hobbies" name="child_hobbies">
+        </div>
+
+        <div class="form-group">
+          <div class="phone-input-group">
+            <span class="country-code" dir="ltr">+972</span>
+            <input type="tel" id="phone-number" name="phone_number" placeholder="מספר טלפון (ליצירת קשר)" required>
+          </div>
+        </div>
+
+        <button type="submit">בואו נתחיל את ההרפתקאה!</button>
+        <p class="disclaimer">
+          התמונות המיוצרות והמידע עליהן נשארים בשרתים מאובטחים. כל התמונות שעולות מוגנות באמצעות הצפנה ואבטחת
+          נתונים בסטנדרט הגבוה ביותר.
+        </p>
+      </div>
+    </form>
+    <div id="result"></div>
+    <div id="status"></div>
+  </div>
+
+  <div id="guidance-modal" class="modal hidden">
+    <div class="modal-content">
+      <span class="close-button" onclick="closeGuidanceModal()"><i class="fas fa-times"></i></span>
+      <h2>תמונת הדמות הראשית:</h2>
+      <p class="tips-subtitle main-tips-subtitle">טיפים לצילום הדמות הראשית:</p>
+      <p class="upload-hint main-upload-hint">העלו תמונה איכותית של ילדכם כאשר הוא נמצא במרכז, בגובה העיניים
+        ובתאורה טובה.</p>
+
+      <div class="image-examples-container">
+        <div class="example-image good-example-large">
+          <div class="example-icon-wrapper">
+            <img class="example-img" src="assets/img/example-goog-face.jpg" alt="דוגמה טובה">
+          </div>
+          <i class="fas fa-check-circle status-icon"></i>
+        </div>
+        <div class="example-image bad-example-small">
+          <div class="example-icon-wrapper">
+            <img class="example-img" src="assets/img/example-bad-obscured.jpg" alt="פנים מוסתרות">
+          </div>
+          <i class="fas fa-times-circle status-icon"></i>
+        </div>
+        <div class="example-image bad-example-small">
+          <div class="example-icon-wrapper">
+            <img class="example-img" src="assets/img/example-bad-group.jpg" alt="יותר מילד 1">
+          </div>
+          <i class="fas fa-times-circle status-icon"></i>
+        </div>
+        <div class="example-image bad-example-small">
+          <div class="example-icon-wrapper">
+            <img class="example-img" src="assets/img/example-bad-face.jpg" alt="איכות נמוכה">
+          </div>
+          <i class="fas fa-times-circle status-icon"></i>
+        </div>
+      </div>
+      <div class="security-disclaimer">
+        <i class="fas fa-lock"></i>
+        <span>
+          התמונות נמחקות מהשרת מיד לאחר יצירת האיור. השימוש הוא לצורך יצירת הספר בלבד.
+        </span>
+      </div>
+      <button class="primary-color-btn" id="select-file-button"
+        onclick="document.getElementById('child-photo').click(); closeGuidanceModal();">
+        העלאת תמונה
+      </button>
+    </div>
+  </div>
+
+  <div id="cropping-modal" class="modal hidden">
+    <div class="modal-content">
+      <span class="close-button" onclick="closeCroppingModal()"><i class="fas fa-times"></i></span>
+      <h2>כוונון תמונת הדמות הראשית</h2>
+      <p class="upload-hint main-upload-hint">מקמו את הפנים בתוך העיגול הכחול. השתמשו בזום ובסיבוב.</p>
+      <div class="cropping-area">
+        <div class="image-to-crop-container">
+          <img id="modal-crop-image" src="" alt="תמונה לחיתוך">
+          <div class="crop-circle"></div>
+        </div>
+      </div>
+      <div class="crop-controls mebook-style">
+        <button type="button" class="mebook-rotate-btn" id="rotate-button">
+          <i class="fas fa-undo-alt"></i>
+        </button>
+        <i class="fas fa-search-minus control-icon"></i>
+        <input type="range" min="1" max="5" value="1.5" step="0.01" class="mebook-slider" id="zoom-slider">
+        <i class="fas fa-search-plus control-icon"></i>
+      </div>
+      <button class="primary-color-btn" id="continue-button">
+        המשך
+      </button>
+    </div>
+  </div>
+  <canvas id="cropping-canvas" style="display:none;"></canvas>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+      // DOM Elements
+      const form = document.getElementById('book-creation-form');
+      const photoInput = document.getElementById('child-photo');
+      const croppedFileInput = document.getElementById('cropped-file-input');
+      const imagePreview = document.getElementById('image-preview');
+      const profilePicWrapper = document.getElementById('profile-pic-wrapper');
+      const profilePicGroup = document.querySelector('.profile-pic-group');
+      const uploadIcon = document.querySelector('.upload-icon');
+      const genderOptions = document.querySelectorAll('.gender-option');
+      const childGenderInput = document.getElementById('child-gender');
+      const phoneInput = document.getElementById('phone-number');
+      const childNameInput = document.getElementById('child-name');
+      const childAgeInput = document.getElementById('child-age');
+      const guidanceModal = document.getElementById('guidance-modal');
+      const selectFileButton = document.getElementById('select-file-button');
+      const croppingModal = document.getElementById('cropping-modal');
+      const modalImage = document.getElementById('modal-crop-image');
+      const croppingArea = document.querySelector('.cropping-area');
+      const continueButton = document.getElementById('continue-button');
+      const rotateButton = document.getElementById('rotate-button');
+      const zoomSlider = document.getElementById('zoom-slider');
+      const detailsSection = document.getElementById('details-section');
+      const canvas = document.getElementById('cropping-canvas');
+      const resultDiv = document.getElementById('result');
+      const statusDiv = document.getElementById('status');
+      const submitButton = document.querySelector('button[type="submit"]');
+      const selectionCards = document.querySelectorAll('.selection-card');
+      const bookTopicInput = document.getElementById('book-topic');
+      const childTraitsHiddenInput = document.getElementById('child-traits');
+      const traitChips = document.querySelectorAll('.trait-chip');
+      const traitErrorMessage = document.getElementById('trait-error-message');
+      const minSelection = parseInt(childTraitsHiddenInput?.dataset.minSelection || 2);
+      const maxSelection = parseInt(childTraitsHiddenInput?.dataset.maxSelection || 2);
+      const initialUploadArea = document.getElementById('initial-upload-area');
+      const mainPageLoader = document.getElementById('main-page-loader');
+      const startFlowButton = document.getElementById('start-flow-button');
+
+      // משתנים לתחביבים
+      const hobbyChips = document.querySelectorAll('.hobby-chip');
+      const childHobbiesHiddenInput = document.getElementById('child-hobbies');
+      const otherHobbyInput = document.getElementById('other-hobby-input');
+
+      const EMPTY_GIF_URL = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
+      const N8N_WEBHOOK_URL = '...';
+
+      // משתנים לשמירת מצב הקרופר
+      let currentZoom = 1.5;
+      let currentRotation = 0;
+      let currentOffsetX = 0;
+      let currentOffsetY = 0;
+      let originalImageWidth = 0;
+      let originalImageHeight = 0;
+      let imageAspectRatio = 1;
+      let croppedPhotoFile = null;
+
+      // פונקציה לעדכון טרנספורמציות התמונה
+      function updateModalImageTransform() {
+        modalImage.style.transform = `translate(${currentOffsetX}px, ${currentOffsetY}px) scale(${currentZoom}) rotate(${currentRotation}deg)`;
+      }
+
+      // חשיפת פונקציות ל-Global Scope
+      window.closeGuidanceModal = function () {
+        guidanceModal.classList.remove('visible');
+      }
+
+      window.closeCroppingModal = function () {
+        croppingModal.classList.remove('visible');
+      }
+
+      // --- לוגיקת בחירת מין ---
+      genderOptions.forEach(option => {
+        option.addEventListener('click', () => {
+          genderOptions.forEach(opt => opt.classList.remove('selected'));
+          option.classList.add('selected');
+          childGenderInput.value = option.dataset.gender;
+        });
+      });
+
+      // --- לוגיקת בחירת כרטיס ---
+      selectionCards.forEach(card => {
+        card.addEventListener('click', () => {
+          selectionCards.forEach(c => c.classList.remove('selected'));
+          card.classList.add('selected');
+          bookTopicInput.value = card.dataset.optionValue;
+        });
+      });
+
+      // --- עדכון תכונות ---
+      function updateChildTraits() {
+        if (!childTraitsHiddenInput) return;
+        let selectedTraits = Array.from(traitChips)
+          .filter(chip => chip.classList.contains('selected'))
+          .map(chip => chip.dataset.trait);
+        if (traitErrorMessage) {
+          traitErrorMessage.classList.remove('visible');
+          traitErrorMessage.textContent = '';
+        }
+
+        if (selectedTraits.length > maxSelection) {
+          if (traitErrorMessage) {
+            traitErrorMessage.textContent = `ניתן לבחור עד ${maxSelection} תכונות בלבד.`;
+            traitErrorMessage.classList.add('visible');
+          }
+          const lastSelectedTrait = selectedTraits.pop();
+          const chipToRemove = Array.from(traitChips).find(chip =>
+            chip.dataset.trait === lastSelectedTrait && chip.classList.contains('selected')
+          );
+          if (chipToRemove) {
+            chipToRemove.classList.remove('selected');
+          }
+          selectedTraits = Array.from(traitChips)
+            .filter(chip => chip.classList.contains('selected'))
+            .map(chip => chip.dataset.trait);
+        }
+        childTraitsHiddenInput.value = selectedTraits.join(',');
+      }
+
+      traitChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+          chip.classList.toggle('selected');
+          updateChildTraits();
+        });
+      });
+      updateChildTraits();
+
+      // --- עדכון תחביבים ---
+      hobbyChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+          chip.classList.toggle('selected');
+          updateChildHobbies();
+        });
+      });
+
+      otherHobbyInput.addEventListener('input', updateChildHobbies);
+
+      function updateChildHobbies() {
+        const selectedHobbies = Array.from(hobbyChips)
+          .filter(chip => chip.classList.contains('selected'))
+          .map(chip => chip.dataset.hobby);
+
+        const customHobby = otherHobbyInput.value.trim();
+        if (customHobby) {
+          selectedHobbies.push(customHobby);
+        }
+
+        childHobbiesHiddenInput.value = selectedHobbies.join(', ');
+      }
+
+      // --- חיתוך תמונה ---
+      async function cropImage() {
+        const cropContainer = croppingArea;
+        const img = modalImage;
+        const outputSize = 400;
+
+        canvas.width = outputSize;
+        canvas.height = outputSize;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, outputSize, outputSize);
+
+        const containerWidth = cropContainer.clientWidth;
+        const containerHeight = cropContainer.clientHeight;
+        const imgNaturalWidth = img.naturalWidth;
+        const imgNaturalHeight = img.naturalHeight;
+        const naturalAspect = imgNaturalWidth / imgNaturalHeight;
+        const containerAspect = containerWidth / containerHeight;
+
+        let renderedImgWidth, renderedImgHeight, offsetX, offsetY;
+
+        if (naturalAspect > containerAspect) {
+          renderedImgWidth = containerWidth;
+          renderedImgHeight = containerWidth / naturalAspect;
+          offsetX = 0;
+          offsetY = (containerHeight - renderedImgHeight) / 2;
+        } else {
+          renderedImgHeight = containerHeight;
+          renderedImgWidth = containerHeight * naturalAspect;
+          offsetX = (containerWidth - renderedImgWidth) / 2;
+          offsetY = 0;
+        }
+
+        ctx.save();
+        const finalScale = outputSize / containerWidth;
+        ctx.scale(finalScale, finalScale);
+        ctx.translate(containerWidth / 2, containerHeight / 2);
+        ctx.translate(currentOffsetX, currentOffsetY);
+        ctx.scale(currentZoom, currentZoom);
+        ctx.rotate(currentRotation * Math.PI / 180);
+        ctx.translate(-containerWidth / 2, -containerHeight / 2);
+
+        ctx.drawImage(img, offsetX, offsetY, renderedImgWidth, renderedImgHeight);
+        ctx.restore();
+
+        ctx.globalCompositeOperation = 'destination-in';
+        ctx.beginPath();
+        ctx.arc(outputSize / 2, outputSize / 2, outputSize / 2, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.globalCompositeOperation = 'source-over';
+
+        return new Promise(resolve => {
+          canvas.toBlob(blob => {
+            resolve(blob);
+          }, 'image/jpeg', 0.95);
+        });
+      }
+
+      // --- אירועים ---
+      startFlowButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        guidanceModal.classList.add('visible');
+      });
+
+      uploadIcon.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        guidanceModal.classList.add('visible');
+      });
+
+      document.querySelectorAll('.close-button').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const modal = e.target.closest('.modal');
+          if (modal) modal.classList.remove('visible');
+        });
+      });
+
+      photoInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            modalImage.src = e.target.result;
+            currentZoom = 1.5;
+            currentRotation = 0;
+            currentOffsetX = 0;
+            currentOffsetY = 0;
+            zoomSlider.value = currentZoom;
+
+            modalImage.onload = () => {
+              originalImageWidth = modalImage.naturalWidth;
+              originalImageHeight = modalImage.naturalHeight;
+              imageAspectRatio = originalImageWidth / originalImageHeight;
+              updateModalImageTransform();
+              croppingModal.classList.add('visible');
+            };
+          };
+          reader.readAsDataURL(file);
+        } else {
+          imagePreview.src = EMPTY_GIF_URL;
+          imagePreview.classList.remove('has-image');
+        }
+      });
+
+      continueButton.addEventListener('click', async () => {
+        const croppedBlob = await cropImage();
+        croppingModal.classList.remove('visible');
+        initialUploadArea.classList.add('loading-active');
+        mainPageLoader.classList.remove('hidden');
+
+        // לודר מדומה 4 שניות
+        await new Promise(r => setTimeout(r, 4000));
+
+        // הסתרת מסך 1 והלודר
+        mainPageLoader.classList.add('hidden');
+        initialUploadArea.style.display = 'none'; // חשוב: מעלים את מסך 1
+
+        // עדכון תמונה
+        croppedPhotoFile = croppedBlob;
+        const objectUrl = URL.createObjectURL(croppedBlob);
+        imagePreview.src = objectUrl;
+        imagePreview.classList.add('has-image');
+        uploadIcon.style.display = 'flex';
+
+        // הצגת מסך 2
+        detailsSection.classList.remove('details-section-hidden');
+        detailsSection.classList.add('details-section-visible');
+
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(new File([croppedBlob], "cropped_image.jpg", {
+          type: 'image/jpeg'
+        }));
+        croppedFileInput.files = dataTransfer.files;
+
+        setTimeout(() => {
+          window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+          });
+        }, 100);
+      });
+
+      rotateButton.addEventListener('click', () => {
+        currentRotation = (currentRotation + 90) % 360;
+        updateModalImageTransform();
+      });
+      zoomSlider.addEventListener('input', function () {
+        currentZoom = parseFloat(this.value);
+        updateModalImageTransform();
+      });
+
+      // גרירת תמונה
+      let isDragging = false;
+      let startX, startY;
+      modalImage.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        modalImage.style.cursor = 'grabbing';
+      });
+      document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        const rotationRad = currentRotation * (Math.PI / 180);
+        const cos = Math.cos(rotationRad);
+        const sin = Math.sin(rotationRad);
+        const rotatedDx = dx * cos + dy * sin;
+        const rotatedDy = dy * cos - dx * sin;
+        currentOffsetX += rotatedDx;
+        currentOffsetY += rotatedDy;
+        updateModalImageTransform();
+        startX = e.clientX;
+        startY = e.clientY;
+      });
+      document.addEventListener('mouseup', () => {
+        isDragging = false;
+        modalImage.style.cursor = 'grab';
+      });
+      document.addEventListener('mouseleave', () => {
+        isDragging = false;
+        modalImage.style.cursor = 'grab';
+      });
+      modalImage.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1) return;
+        e.preventDefault();
+        isDragging = true;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+      });
+      document.addEventListener('touchmove', (e) => {
+        if (!isDragging || e.touches.length !== 1) return;
+        e.preventDefault();
+        const dx = e.touches[0].clientX - startX;
+        const dy = e.touches[0].clientY - startY;
+
+        const rotationRad = currentRotation * (Math.PI / 180);
+        const cos = Math.cos(rotationRad);
+        const sin = Math.sin(rotationRad);
+
+        const rotatedDx = dx * cos + dy * sin;
+        const rotatedDy = dy * cos - dx * sin;
+
+        currentOffsetX += rotatedDx;
+        currentOffsetY += rotatedDy;
+
+        updateModalImageTransform();
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+      }, {
+        passive: false
+      });
+      document.addEventListener('touchend', () => {
+        isDragging = false;
+      });
+
+      // ולידציה
+      function validateForm() {
+        let ok = true;
+        const name = childNameInput.value.trim();
+        const age = parseInt(childAgeInput.value);
+        const gender = childGenderInput.value;
+        const topic = bookTopicInput.value;
+        const phone = phoneInput.value.trim();
+
+        const highlight = (el) => {
+          const highlightEl = el === profilePicWrapper ? profilePicGroup : el;
+          if (!highlightEl) return;
+          if (highlightEl.classList?.contains('gender-selection') || highlightEl.classList?.contains('option-cards') || highlightEl.id === 'child-traits-group' || highlightEl.classList?.contains('trait-selection-container')) {
+            highlightEl.style.boxShadow = '0 0 0 2px var(--primary-color)';
+          } else {
+            highlightEl.style.border = '2px solid var(--primary-color)';
+          }
+        };
+        const unhighlight = (el) => {
+          const highlightEl = el === profilePicWrapper ? profilePicGroup : el;
+          if (!highlightEl) return;
+          highlightEl.style.border = '';
+          highlightEl.style.boxShadow = 'none';
+          if (highlightEl.classList?.contains('phone-input-group')) {
+            highlightEl.style.border = '2px solid var(--border-light)';
+          }
+        };
+
+        updateChildTraits();
+        const selectedTraitsArray = childTraitsHiddenInput.value.split(',').filter(t => t.trim() !== '');
+        const traitGroup = document.querySelector('.trait-selection-container');
+        if (selectedTraitsArray.length < minSelection || selectedTraitsArray.length > maxSelection) {
+          highlight(traitGroup);
+          ok = false;
+        } else {
+          unhighlight(traitGroup);
+        }
+
+        if (!croppedPhotoFile) { highlight(profilePicWrapper); ok = false; } else { unhighlight(profilePicWrapper); }
+        if (name.length < 2) { highlight(childNameInput); ok = false; } else { unhighlight(childNameInput); }
+        if (isNaN(age) || age < 1 || age > 14) { highlight(childAgeInput); ok = false; } else { unhighlight(childAgeInput); }
+        if (!gender) { highlight(document.querySelector('.gender-selection')); ok = false; } else { unhighlight(document.querySelector('.gender-selection')); }
+        if (!topic) { highlight(document.querySelector('.option-cards')); ok = false; } else { unhighlight(document.querySelector('.option-cards')); }
+        if (phone.length < 7 || !/^\d+$/.test(phone)) { highlight(document.querySelector('.phone-input-group')); ok = false; } else { unhighlight(document.querySelector('.phone-input-group')); }
+        return ok;
+      }
+
+      // מילון תרגום
+      const translations = {
+        gender: { 'boy': 'בן', 'girl': 'בת' },
+        topics: {
+          'space': { theme: 'מסע בין כוכבים וגילוי עולמות חדשים', takeaway: 'סקרנות וגילוי: לעודד את הרצון לדעת ולחקור' },
+          'jungle': { theme: 'הרפתקה ביער הגשם עם חיות פרא', takeaway: 'אומץ והתגברות: לגלות את הכוח הפנימי מול פחדים' },
+          'fantasy': { theme: 'ממלכה קסומה עם יצורים אגדיים', takeaway: 'יצירתיות ודמיון: הכל אפשרי כשמאמינים בקסם' },
+          'sea': { theme: 'הרפתקה במעמקי הים הגדול', takeaway: 'כולם מיוחדים: לקבל את השונה ולחגוג ייחודיות' }
+        },
+        traits: {
+          'curious': 'סקרן/ית', 'brave': 'אמיץ/ה', 'creative': 'יצירתי/ת',
+          'adventurous': 'הרפתקן/ית', 'kind': 'טוב/ת לב', 'funny': 'מצחיק/ה',
+          'shy': 'ביישן/ית', 'energetic': 'אנרגטי/ת'
+        },
+        hobbies: {
+          'drawing': 'אוהב/ת לצייר ולצבוע',
+          'playing_ball': 'משחק/ת בכדור',
+          'building_lego': 'בנייה בלגו והרכבה',
+          'dancing': 'ריקוד ותנועה',
+          'baking': 'אפיית עוגות במטבח',
+          'reading': 'קריאת סיפורים וספרים',
+          'cycling': 'רכיבה על אופניים',
+          'singing': 'שירה ומוזיקה',
+          'playing_with_animals': 'משחק עם בעלי חיים'
+        }
+      };
+
+      function createYamlString(formData) {
+        const name = formData.get('child_name');
+        const age = formData.get('child_age');
+        const genderRaw = formData.get('child_gender');
+        const topicRaw = formData.get('book_topic');
+        const traitsRaw = formData.get('child_traits') || '';
+        const hobbiesRaw = formData.get('child_hobbies') || '';
+        const phone = formData.get('phone_number');
+
+        const gender = translations.gender[genderRaw] || genderRaw;
+        const topicData = translations.topics[topicRaw] || { theme: topicRaw, takeaway: '' };
+        const traitsList = traitsRaw.split(',').filter(t => t).map(t => translations.traits[t] || t);
+        const hobbiesList = hobbiesRaw.split(',').map(h => h.trim()).filter(h => h).map(h => translations.hobbies[h] || h);
+
+        let yaml = `name: "${name}"\n`;
+        yaml += `age: ${age}\n`;
+        yaml += `gender: "${gender}"\n`;
+        yaml += `hobbies:\n`;
+        if (hobbiesList.length > 0) hobbiesList.forEach(h => yaml += `  - "${h}"\n`);
+        else yaml += `  - משחק חופשי\n`;
+        yaml += `character_traits:\n`;
+        traitsList.forEach(t => yaml += `  - "${t}"\n`);
+        yaml += `favorite_theme: "${topicData.theme}"\n`;
+        yaml += `desired_takeaway: "${topicData.takeaway}"\n`;
+        yaml += `personal_notes: |\n  הילד/ה ${name} בן/בת ${age}. ${traitsList.join(', ')}. אוהב/ת: ${hobbiesList.join(', ')}.\n`;
+        yaml += `story_language: Hebrew\n`;
+        yaml += `contact_phone: "${phone}"\n`;
+
+        return yaml;
+      }
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        resultDiv.innerHTML = '';
+        statusDiv.textContent = '';
+        updateChildHobbies();
+
+        if (!validateForm()) {
+          statusDiv.innerHTML = `<span class="error">אנא מלאו את כל השדות בצורה תקינה.</span>`;
+          return;
+        }
+
+        const formData = new FormData(form);
+        const yamlString = createYamlString(formData);
+
+        // הורדת הקובץ למחשב
+        const blob = new Blob([yamlString], { type: 'text/yaml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'story_data.yaml';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        statusDiv.innerHTML = '<span style="color:green; font-weight:bold;">קובץ ה-YAML ירד למחשב שלך לבדיקה! ✅</span>';
+      });
+
+    });
+  </script>
+</body>
+
 </html>
